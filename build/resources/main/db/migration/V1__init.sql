@@ -1,0 +1,14 @@
+CREATE TABLE service(
+    id BINARY(16) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    port SMALLINT NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE status(
+    id BINARY(16) PRIMARY KEY,
+    service_id BINARY(16) NOT NULL,
+    state BOOLEAN NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
