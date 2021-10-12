@@ -10,8 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,11 +50,43 @@ public class ServicePoller {
     }
 
     public static ServiceState pingHost(String host, int port) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(host, port), 5000);
-            return ServiceState.UP;
+        URL url;
+        try {
+            url = new URL(host + ":" + port);
+        } catch (MalformedURLException e) {
+            return ServiceState.DOWN;
+        }
+
+        HttpURLConnection connection;
+        try {
+            connection = (HttpURLConnection)url.openConnection();
         } catch (IOException e) {
             return ServiceState.DOWN;
         }
+
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+
+        try {
+            connection.setRequestMethod("GET");
+        } catch (ProtocolException e) {
+            return ServiceState.DOWN;
+        }
+
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            return ServiceState.DOWN;
+        }
+
+        try {
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_UNAVAILABLE) {
+                return ServiceState.UP;
+            }
+        } catch (IOException e) {
+            return ServiceState.DOWN;
+        }
+
+        return ServiceState.DOWN;
     }
 }
